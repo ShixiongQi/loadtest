@@ -1,4 +1,44 @@
-[![Build Status](https://secure.travis-ci.org/alexfernandez/loadtest.svg)](http://travis-ci.org/alexfernandez/loadtest)
+## Installation
+```
+git clone https://github.com/ShixiongQi/loadtest.git
+cd loadtest
+
+# install dependencies
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt install -y nodejs
+npm install stdio
+npm install log
+npm install testing
+npm install websocket
+npm install confinode
+npm install agentkeepalive
+npm install https-proxy-agent
+```
+
+## Usage
+1. **Assume you have installed Kubernetes and Knative Serving (including the Istio Ingress)**
+2. **The following commands were tested with Kubernetes v1.19.0 and Knative v0.22.0**
+<!-- 3. **The steps to install Kubernetes v1.19.0 and Knative v0.22.0 are presented below.** -->
+```
+# First deploy two Knative services, make sure you are at the loadtest directory.
+# You may need to modify the requested resources for each service based on your testing environment.
+kubectl apply -f azure_wrk/example_service/example-service.yaml
+
+# Make sure the services are successfully deployed before moving forward.
+
+# Assume you will execute the load generator on Master node
+node azure_wrk/workload-1-generator.js # Sending workload 1 to service 1
+node azure_wrk/workload-2-generator.js # Sending workload 2 to service 2
+
+# You can observe the change in the number of active instances per service
+kubectl get deploy -w
+```
+
+## Notes
+1. If you want to execute the load generator script (i.e., workload-1-generator.js) on Worker nodes, please comment out line 19 to line 23 as you cannot execute `kubectl` on worker node. Instead, you need to specify the IP and Port of your ingress gateway manually in the script. Go to the Master node, then please do `kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}'` and `kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}'` to retrieve the IP and port number of ingress gateway and then modify line 27 `url: 'http://' + IH + ':' + IP + '?sleep=500',`, e.g., if the IP and port number you get are `10.10.1.1` and `30521`, then modify the line 27 as `url: 'http://10.10.1.1:30521?sleep=500',`
+2. If you run your own Knative service and want to specify the Knative service name in the load generator script, please modify line 29 `headers: { 'Host': 'autoscale-go-2.default.example.com' },` and replace the Knative service name `autoscale-go-2.default.example.com`.
+
+<!-- [![Build Status](https://secure.travis-ci.org/alexfernandez/loadtest.svg)](http://travis-ci.org/alexfernandez/loadtest)
 [![run on repl.it](http://repl.it/badge/github/alexfernandez/loadtest)](https://repl.it/github/alexfernandez/loadtest)
 
 [![NPM](https://nodei.co/npm/loadtest.png?downloads=true)](https://nodei.co/npm/loadtest/)
@@ -856,4 +896,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ -->
